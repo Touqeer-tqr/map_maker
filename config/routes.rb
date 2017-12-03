@@ -2,6 +2,11 @@ Rails.application.routes.draw do
   # The priority is based upon order of creation: first created -> highest priority.
   # See how all your routes lay out with "rake routes".
 
+  root 'polygon#map'
+  delete 'delete_map' => 'polygon#destroy'
+  get 'save_polygon' => 'polygon#save_polygon'
+  post 'update_polygon' => 'polygon#update_polygon'
+
   # You can have the root of your site routed with "root"
   # root 'welcome#index'
 
