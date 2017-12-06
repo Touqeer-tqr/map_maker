@@ -1,6 +1,5 @@
 class PolygonController < ApplicationController
 
-  # before_action :authenticate_user!,only:[:map]
   before_action :check_polygon, only:[:map]
   before_action :set_map, only: [:destroy, :update_polygon]
   before_action :token_authentication, only: [:service_areas]
@@ -10,7 +9,7 @@ class PolygonController < ApplicationController
     if @map.present?
       @hash = []
       @map.each do |map|
-        poly = Gmaps4rails.build_markers(map.polygons) do |polygon, point|
+        poly = Gmaps4rails.build_markers(map.polygons_list) do |polygon, point|
           point.lat polygon[1]['lat']
           point.lng polygon[1]['lng']
         end
@@ -46,13 +45,13 @@ end
   def destroy
     @map.destroy
     respond_to do |format|
-      format.html { redirect_to map_path(), notice: 'Polygon deleted successfully.' }
+      format.html { redirect_to root_path(), notice: 'Polygon deleted successfully.' }
       format.json { head :no_content }
     end
   end
 
   def save_polygon
-    @map = Polygon.create(name: params[:name], polygons: params[:polygons])
+    @map = Polygon.create(name: params[:name], polygons_list: params[:polygons])
   end
 
   def update_polygon

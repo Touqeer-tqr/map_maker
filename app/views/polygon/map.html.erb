@@ -1,28 +1,41 @@
-<script src="//maps.google.com/maps/api/js?key=AIzaSyBRXZRZ2D2sB0lqQhBDsm619tV471Y5zFw"></script>
-<script src="//cdn.rawgit.com/mahnunchik/markerclustererplus/master/dist/markerclusterer.min.js"></script>
-<script src='//cdn.rawgit.com/printercu/google-maps-utility-library-v3-read-only/master/infobox/src/infobox_packed.js' type='text/javascript'></script>
-<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/lodash.js/0.10.0/lodash.min.js"></script>
+<h1 style="text-align: center;">Draw, Edit or Delete Polygon on Map</h1>
+<div class="col-md-12 col-sm-12 col-xs-12">
+  <div class="col-xs-10 form-group" style="padding: 0px 4px 0px 0px; height: 100%;">
+    <div id="map" style='width: 100%; height: 540px;'></div>
+  </div>
+  <div class="col-xs-2 form-group" style="padding: 0px;">
+    <button id="draw_btn" class="btn btn-info" style="float: right;" data-toggle="tooltip" data-placement="bottom" title="" data-original-title="Create Polygon" onclick='save_polygons()'><i id="draw_icon" class="fa fa-pencil"></i></button>
+
+    <button id="save_btn" class="btn btn-success" style="float: right; display: none;" data-toggle="tooltip" data-placement="bottom" title="" data-original-title="Update Polygon" onclick='update_polygons()'><i class="fa fa-save (alias)"></i></button>
+
+    <button id="cancel_btn" class="btn btn-warning" style="float: right; display: none;" data-toggle="tooltip" data-placement="bottom" title="" data-original-title="Cancel" onclick='cancel_update()'><i class="fa fa-times"></i></button>
+    <%= render "index" %>
+  </div>
+</div>
+
+<div id="polygon_name" class="modal fade" role="dialog">
+  <div class="modal-dialog" style="padding-top: 120px;">
+    <!-- Modal content-->
+    <div class="modal-content">
+      <div class="modal-header colors">
+        <button type="button" class="close colors" data-dismiss="modal" method="reset">X</button>
+        <h4 class="modal-title">Polygon</h4>
+      </div>
+      <div class="modal-body">
+        <%= text_field_tag 'name', '', autofocus: true, required: true, placeholder: "Name...", id: "name_field", class: "form-control"%>
+        <br>
+        <button type="button" class="btn btn-info" style="float; right;" data-dismiss="modal" onclick='send_polygons()'>Done</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 <script type="text/javascript">
-var draw = false;
-var polygons = [];
 var infoWindow = new google.maps.InfoWindow;
-var edit_polygon;
-var index = 0;
-var ID = 0;
-var Qatar = [{"lat":29.937748,"lng":69.373000}];
-var map_focus = Qatar;
-var polygonIndex;
-var zoom = 6;
 handler = Gmaps.build('Google');
-
 $(function() {
-  jQuery(function(){
-       jQuery('#menu_toggle').click();
-    });
-   make_map(null);
+  make_map(null);
 });
-
 function make_map(id){
   handler.buildMap({ provider: {}, internal: {id: 'map'}}, function(){
       <% if @hash.present? %>
@@ -50,168 +63,7 @@ function make_map(id){
           }
         <% end %>
       <% end %>
-      google.maps.event.addListener(handler.map.getServiceObject(),'click',function(event){
-         if (draw == true)
-         {
-            if (index == 0)
-            {
-               handler.bounds.extendWith(handler.addPolygons(
-                  [[
-                     { lat: event.latLng.lat(), lng: event.latLng.lng() },
-                     { lat: event.latLng.lat(), lng: event.latLng.lng() }
-                  ]],{ strokeColor: '#FFBF00'}
-               ));
-            }
-            else
-            {
-               handler.bounds.extendWith(
-                  handler.addPolygons(
-                  [
-                     [
-                        {lat: polygons[index-1]['lat'], lng: polygons[index-1]['lng']},
-                        {lat: event.latLng.lat(), lng: event.latLng.lng()}
-                     ]
-                  ],{ strokeColor: '#FFBF00'}
-               ));
-            }
-           polygons.push({lat:event.latLng.lat(), lng:event.latLng.lng()});
-           index += 1;
-         }
-      });
-      handler.fitMapToBounds();
-      handler.getMap().setZoom(zoom);
-      handler.map.centerOn(map_focus);
+      polygon_marker();
    });
 }
-
-function save_polygons(){
-   draw = !draw;
-   if (draw == false)
-   {
-      document.getElementById("cancel_btn").style.display = "none";
-      document.getElementById("draw_btn").className = "btn btn-info";
-      document.getElementById("draw_icon").className = "fa fa-pencil";
-      if (index != 0)
-      {
-        $("#polygon_name").modal();
-        handler.bounds.extendWith(handler.addPolygons(
-          [
-            [
-              {lat:  polygons[index-1]['lat'], lng: polygons[index-1]['lng']},
-              {lat:  polygons[0]['lat'], lng: polygons[0]['lng']}
-            ]
-          ],{ strokeColor: '#FFBF00'}
-        ));
-        handler.bounds.extendWith(handler.addPolygons([polygons],{ strokeColor: '#FFBF00'}));
-      }
-   }
-   else
-   {
-      document.getElementById("cancel_btn").style.display = "block";
-      document.getElementById("draw_btn").className = "btn btn-success";
-      document.getElementById("draw_icon").className = "fa fa-save (alias)";
-   }
-}
-
-function send_polygons(){
-  name_filed = document.getElementById("name_field");
-  name = name_field.value;
-  jQuery.ajax({
-    data: ({name: name, polygons: polygons}),
-    type: 'get',
-    url: "/save_polygon"
-  });
-  name_field.value = "";
-  polygons = [];
-  index = 0;
-  location.reload(true);
-}
-
-function edit_polygons(id,index,lat,lng){
-  polygonIndex = index;
-  ID = id;
-  console.log(id);
-  document.getElementById("save_btn").style.display = "block";
-  document.getElementById("cancel_btn").style.display = "block";
-  document.getElementById("draw_btn").style.display = "none";
-  map_focus = [{"lat": lat ,"lng": lng }];
-  zoom = 10;
-  make_map(index);
-}
-
-function update_polygons(){
-  polygons = [];
-  var arr = edit_polygon.serviceObject.latLngs.b[0].b;
-  for (var i=0; i<edit_polygon.serviceObject.latLngs.b[0].length; i++)
-  {
-    polygons.push({lat: arr[i].lat(), lng: arr[i].lng()});
-  }
-  document.getElementById("save_btn").style.display = "none";
-  document.getElementById("draw_btn").style.display = "block";
-  jQuery.ajax({
-    data: ({ id: ID, polygons: polygons }),
-    type: 'post',
-    url: "/update_polygon"
-  });
-  location.reload(true);
-}
-
-function cancel_update(){
-  document.getElementById("save_btn").style.display = "none";
-  document.getElementById("cancel_btn").style.display = "none";
-  document.getElementById("draw_btn").style.display = "block";
-  document.getElementById("draw_btn").className = "btn btn-info";
-  document.getElementById("draw_icon").className = "fa fa-pencil";
-  name_field.value = "";
-  polygons = [];
-  index = 0;
-  draw = false;
-  map_focus = Qatar;
-  zoom = 9;
-  make_map(null);
-}
-
 </script>
-
-<div class="right_col" role="main">
-  <div class="">
-    <div class="page-title">
-      <div class="title_left" style="width: 20%;">
-        <h3>Map</h3>
-      </div>
-      <button id="draw_btn" class="btn btn-info" style="float: right;" data-toggle="tooltip" data-placement="bottom" title="" data-original-title="Create Polygon" onclick='save_polygons()'><i id="draw_icon" class="fa fa-pencil"></i></button>
-
-      <button id="save_btn" class="btn btn-success" style="float: right; display: none;" data-toggle="tooltip" data-placement="bottom" title="" data-original-title="Update Polygon" onclick='update_polygons()'><i class="fa fa-save (alias)"></i></button>
-
-      <button id="cancel_btn" class="btn btn-warning" style="float: right; display: none;" data-toggle="tooltip" data-placement="bottom" title="" data-original-title="Cancel" onclick='cancel_update()'><i class="fa fa-times"></i></button>
-    </div>
-      <div id="polygon_name" class="modal fade" role="dialog">
-        <div class="modal-dialog" style="padding-top: 120px;">
-          <!-- Modal content-->
-          <div class="modal-content">
-            <div class="modal-header colors">
-              <button type="button" class="close colors" data-dismiss="modal" method="reset">X</button>
-              <h4 class="modal-title">Polygon</h4>
-            </div>
-            <div class="modal-body">
-              <%= text_field_tag 'name', '', autofocus: true, required: true, placeholder: "Name...", id: "name_field", class: "form-control"%>
-              <br>
-              <button type="button" class="btn btn-info" style="float; right;" data-dismiss="modal" onclick='send_polygons()'>Done</button>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="row">
-        <div class="col-md-12 col-sm-12 col-xs-12">
-          <div class="x_panel">
-              <div class="col-md-10 col-sm-12 col-xs-12 form-group" style="padding: 0px 4px 0px 0px; height: 100%;">
-                <div id="map" style='width: 100%; height: 540px;'></div>
-              </div>
-              <div class="col-md-2 col-sm-12 col-xs-12 form-group" style="padding: 0px;">
-                <%= render "index" %>
-              </div>
-          </div>
-        </div>
-      </div>
-  </div>
-</div>
