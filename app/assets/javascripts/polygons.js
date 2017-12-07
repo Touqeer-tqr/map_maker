@@ -39,6 +39,7 @@ function polygon_marker(){
   });
   handler.fitMapToBounds();
   handler.getMap().setZoom(zoom);
+  // handler.getMap().setOptions({styles});
   handler.map.centerOn(map_focus);
 }
 

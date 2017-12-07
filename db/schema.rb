@@ -13,11 +13,14 @@
 
 ActiveRecord::Schema.define(version: 20171203132916) do
 
+  # These are extensions that must be enabled in order to support this database
+  enable_extension "plpgsql"
+
   create_table "polygons", force: :cascade do |t|
-    t.string   "name",          limit: 255
-    t.text     "polygons_list", limit: 65535
-    t.datetime "created_at",                  null: false
-    t.datetime "updated_at",                  null: false
+    t.string   "name"
+    t.text     "polygons_list"
+    t.datetime "created_at",    null: false
+    t.datetime "updated_at",    null: false
   end
 
 end
