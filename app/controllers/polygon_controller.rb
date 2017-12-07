@@ -55,7 +55,7 @@ end
   end
 
   def update_polygon
-    @map.polygons = params[:polygons]
+    @map.polygons_list = params[:polygons]
     @map.save
   end
 

@@ -94,7 +94,7 @@ function edit_polygons(id,index,lat,lng){
   document.getElementById("cancel_btn").style.display = "block";
   document.getElementById("draw_btn").style.display = "none";
   map_focus = [{"lat": lat ,"lng": lng }];
-  zoom = 10;
+  zoom = 8;
   make_map(index);
 }
 
